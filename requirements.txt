@@ -1,0 +1,18 @@
+
+# Hauptbibliotheken
+torch>=2.0.0
+torchvision
+opencv-python
+opencv-contrib-python
+kornia
+
+# GUI & Interface
+streamlit
+tqdm
+pyyaml
+
+# System
+psutil
+numpy
+Pillow
+requests

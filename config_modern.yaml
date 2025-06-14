@@ -1,0 +1,32 @@
+
+# Zentrale Konfiguration für das Modern Edge Detection Toolkit
+
+# Bildverarbeitung
+resize_output: true               # Ausgabegröße anpassen falls zu klein
+target_resolution: [2480, 3508]   # Maximal gewünschte Größe (Breite, Höhe), kein Zwangs-Crop
+preserve_aspect_ratio: true       # Seitenverhältnis beibehalten bei Resize
+invert_output: true               # Ergebnisse invertieren (dunkle Kanten auf weiß)
+
+# Hardware
+use_cuda: true                    # GPU verwenden falls verfügbar
+max_ram_usage_percent: 90        # Maximal erlaubte RAM-Auslastung (nur zur Überwachung)
+
+# Dateiformate
+input_extensions: [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp", ".jp2"]
+output_format: "png"              # Speichere alle Ergebnisse im PNG-Format
+
+# Ergebnisse
+result_dir: "results"            # Hauptverzeichnis für Ausgabe
+image_dir: "images"              # Standard-Eingabeverzeichnis
+log_dir: "logs"                  # Speicherort für Logdateien
+
+# Modelle
+models:
+  bdcn: "bdcn_repo/pretrained/bdcn_pretrained.pth"
+  rcf: "rcf_repo/model/RCF.pth"
+  hed:
+    model: "hed_repo/hed_pretrained_bsds.caffemodel"
+    proto: "hed_repo/deploy.prototxt"
+  dexined: "dexined_repo/weights/dexined.pth"
+  casenet: "casenet_repo/model/casenet.pth"
+  structured_forest: "models/structured/model.yml.gz"
