@@ -1,53 +1,67 @@
 
-import os
-import yaml
-import time
 import logging
+import os
+from typing import Dict, List
+
+import numpy as np
 import psutil
 import torch
-import numpy as np
+import yaml
 from tqdm import tqdm
-from typing import List, Dict, Tuple
+
 from detectors_modern import (
-    DummyDetector, StructuredForestDetector,
-    BDCNDetector, RCFDetector, HEDDetector
+    BDCNDetector,
+    CASENetDetector,
+    DexiNedDetector,
+    DummyDetector,
+    HEDDetector,
+    RCFDetector,
+    StructuredForestDetector,
 )
-from utils_image import (
-    list_valid_images, load_image, save_image,
-    resize_to_target, ensure_grayscale
-)
+from utils_image import ensure_grayscale, list_valid_images, load_image, resize_to_target, save_image
 
 
 def load_config(config_path: str = "config_modern.yaml") -> Dict:
-    with open(config_path, "r") as f:
+    """Lädt die YAML-Konfiguration."""
+
+    with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def get_ram_usage_percent() -> float:
+    """Gibt die aktuelle RAM-Auslastung zurück."""
+
     return psutil.virtual_memory().percent
 
 
 def get_detector(name: str, config: Dict):
+    """Instanziiert den gewünschten Detektor basierend auf der Konfiguration."""
+
     model_paths = config["models"]
     use_cuda = config.get("use_cuda", True)
 
     if name == "structured_forest":
         return StructuredForestDetector(model_paths["structured_forest"], use_cuda=False)
-    elif name == "bdcn":
+    if name == "bdcn":
         return BDCNDetector(model_paths["bdcn"], use_cuda)
-    elif name == "rcf":
+    if name == "rcf":
         return RCFDetector(model_paths["rcf"], use_cuda)
-    elif name == "hed":
+    if name == "hed":
         return HEDDetector(
             proto_path=model_paths["hed"]["proto"],
             model_path=model_paths["hed"]["model"],
-            use_cuda=use_cuda
+            use_cuda=use_cuda,
         )
-    else:
-        return DummyDetector()
+    if name == "dexined":
+        return DexiNedDetector(model_paths["dexined"], use_cuda)
+    if name == "casenet":
+        return CASENetDetector(model_paths["casenet"], use_cuda)
+    return DummyDetector()
 
 
 def process_images(methods: List[str], config: Dict) -> Dict[str, List[str]]:
+    """Verarbeitet alle gültigen Bilder mit den ausgewählten Methoden."""
+
     image_dir = config["image_dir"]
     result_dir = config["result_dir"]
     target_res = tuple(config.get("target_resolution", [2480, 3508]))
@@ -56,6 +70,11 @@ def process_images(methods: List[str], config: Dict) -> Dict[str, List[str]]:
     invert_enabled = config.get("invert_output", True)
 
     image_paths = list_valid_images(image_dir)
+    if not image_paths:
+        logging.warning("Keine gültigen Eingabebilder in %s gefunden.", image_dir)
+        return {method: [] for method in methods}
+
+    os.makedirs(result_dir, exist_ok=True)
     results = {method: [] for method in methods}
 
     for method in methods:
