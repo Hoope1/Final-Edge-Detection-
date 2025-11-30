@@ -6,9 +6,11 @@ import cv2
 
 
 class EdgeDetectorBase(ABC):
-    """
-    Abstrakte Basisklasse für alle modernen Kantendetektoren.
-    Definiert das Interface für die Anwendung eines Modells auf ein Bild.
+    """Gemeinsame Basisklasse für alle Kantendetektoren.
+
+    Jede Unterklasse implementiert :meth:`load_model` und :meth:`detect` und
+    nutzt dabei die hier vorbereiteten Convenience-Methoden für Pre- und
+    Postprocessing.
     """
 
     def __init__(self, use_cuda: bool = True):
@@ -17,53 +19,30 @@ class EdgeDetectorBase(ABC):
 
     @abstractmethod
     def load_model(self):
-        """
-        Lädt das vortrainierte Modell.
-        Muss von jeder Unterklasse implementiert werden.
-        """
-        pass
+        """Lädt das vortrainierte Modell."""
 
     @abstractmethod
     def detect(self, image: np.ndarray) -> np.ndarray:
-        """
-        Führt die Kantenerkennung auf einem einzelnen Bild aus.
-        Muss von jeder Unterklasse implementiert werden.
-
-        Args:
-            image (np.ndarray): RGB-Bild (H, W, 3), Wertebereich [0, 255]
-
-        Returns:
-            np.ndarray: Binäres Kantenerkennungsbild (H, W), Wertebereich [0, 255]
-        """
-        pass
+        """Führt die Kantenerkennung auf einem einzelnen Bild aus."""
 
     @staticmethod
     def preprocess(image: np.ndarray, target_size: tuple = None) -> np.ndarray:
-        """
-        Optionales Preprocessing, z. B. Resize oder Normalisierung.
+        """Optionales Resize oder Normalisierung für Eingabebilder."""
 
-        Args:
-            image (np.ndarray): RGB-Bild
-            target_size (tuple): (width, height) falls Resize erwünscht
-
-        Returns:
-            np.ndarray: Vorverarbeitetes Bild
-        """
         if target_size is not None:
             image = cv2.resize(image, target_size, interpolation=cv2.INTER_LINEAR)
         return image
 
     @staticmethod
     def postprocess(edge_map: np.ndarray) -> np.ndarray:
-        """
-        Nachverarbeitung: Normalisierung, Invertierung, Clipping.
+        """Normiert, invertiert und clipt das Roh-Edge-Map auf uint8."""
 
-        Args:
-            edge_map (np.ndarray): rohes Edge-Bild (float32 oder uint8)
+        if edge_map.size == 0:
+            return np.zeros_like(edge_map, dtype=np.uint8)
 
-        Returns:
-            np.ndarray: normiertes & invertiertes Kantenergebnis (uint8)
-        """
         if edge_map.dtype != np.uint8:
-            edge_map = (255.0 * edge_map / np.max(edge_map)).clip(0, 255).astype(np.uint8)
+            max_val = float(np.max(edge_map))
+            if max_val == 0:
+                return np.zeros(edge_map.shape, dtype=np.uint8)
+            edge_map = (255.0 * edge_map / max_val).clip(0, 255).astype(np.uint8)
         return 255 - edge_map  # invertiert: dunkle Kanten auf weißem Hintergrund
