@@ -54,11 +54,9 @@ pip install -r requirements.txt
 
 ## 📥 Modelle installieren
 
-```bash
-setup_script.bat
-```
-
-Falls `gdown` fehlt: `pip install gdown`
+Alle benötigten Gewichte und Prototxt-Dateien werden beim ersten Start automatisch
+heruntergeladen. Das vorhandene `setup_script.bat` kann weiterhin manuell genutzt
+werden, ist aber nicht mehr zwingend notwendig.
 
 ## 🧪 Starten
 
