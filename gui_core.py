@@ -18,6 +18,7 @@ from detectors_modern import (
     RCFDetector,
     StructuredForestDetector,
 )
+from model_downloader import ensure_all_models_available
 from utils_image import ensure_grayscale, list_valid_images, load_image, resize_to_target, save_image
 
 
@@ -74,6 +75,7 @@ def process_images(methods: List[str], config: Dict) -> Dict[str, List[str]]:
         logging.warning("Keine gültigen Eingabebilder in %s gefunden.", image_dir)
         return {method: [] for method in methods}
 
+    ensure_all_models_available(config)
     os.makedirs(result_dir, exist_ok=True)
     results = {method: [] for method in methods}
 
